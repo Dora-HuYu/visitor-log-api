@@ -5,6 +5,8 @@ from zoneinfo import ZoneInfo
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
+from plates import is_valid_singapore_plate
+
 app = FastAPI(title="Visitor Log API")
 singapore_timezone = ZoneInfo("Asia/Singapore")
 
@@ -33,7 +35,14 @@ def health_check():
 async def register_visitor(request: VisitorCreate):
     vehicle_plate = request.vehicle_plate
     if vehicle_plate is not None:
-        vehicle_plate = vehicle_plate.strip().upper()
+        vehicle_plate = "".join(vehicle_plate.split()).upper()
+
+        if not is_valid_singapore_plate(vehicle_plate):
+            raise HTTPException(
+                status_code=422,
+                detail="Invalid Singapore vehicle plate",
+            )
+
         if any(
             visitor.vehicle_plate == vehicle_plate
             and visitor.check_out_at is None
