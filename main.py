@@ -2,7 +2,7 @@ from datetime import datetime
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 app = FastAPI(title="Visitor Log API")
@@ -37,4 +37,16 @@ def register_visitor(request: VisitorCreate):
         check_in_at=datetime.now(singapore_timezone),
     )
     visitors[visitor.id] = visitor
+    return visitor
+
+@app.post("/visitors/{visitor_id}/checkout", response_model=Visitor)
+def checkout_visitor(visitor_id: UUID):
+    visitor = visitors.get(visitor_id)
+    if visitor is None:
+        raise HTTPException(status_code=404, detail="Visitor not found")
+
+    if visitor.check_out_at is not None:
+        raise HTTPException(status_code=409, detail="Visitor already checked out")
+
+    visitor.check_out_at = datetime.now(singapore_timezone)
     return visitor
