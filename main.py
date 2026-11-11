@@ -30,17 +30,33 @@ def health_check():
 
 
 @app.post("/visitors", response_model=Visitor, status_code=201)
-def register_visitor(request: VisitorCreate):
+async def register_visitor(request: VisitorCreate):
+    vehicle_plate = request.vehicle_plate
+    if vehicle_plate is not None:
+        vehicle_plate = vehicle_plate.strip().upper()
+        if any(
+            visitor.vehicle_plate == vehicle_plate
+            and visitor.check_out_at is None
+            for visitor in visitors.values()
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="Vehicle is already checked in",
+            )
+
     visitor = Visitor(
-        **request.model_dump(),
         id=uuid4(),
+        name=request.name,
+        unit_number=request.unit_number,
+        vehicle_plate=vehicle_plate,
         check_in_at=datetime.now(singapore_timezone),
     )
     visitors[visitor.id] = visitor
     return visitor
 
+
 @app.post("/visitors/{visitor_id}/checkout", response_model=Visitor)
-def checkout_visitor(visitor_id: UUID):
+async def checkout_visitor(visitor_id: UUID):
     visitor = visitors.get(visitor_id)
     if visitor is None:
         raise HTTPException(status_code=404, detail="Visitor not found")
