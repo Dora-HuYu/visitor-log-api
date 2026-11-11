@@ -19,7 +19,7 @@ def client():
 def test_vehicle_cannot_check_in_twice_before_checkout(client):
     payload = {
         "name": "Jamie Tan",
-        "unit_number": "08-12",
+        "unit_number": "#08-12",
         "vehicle_plate": "SBA1234G",
     }
 
@@ -61,7 +61,7 @@ def test_registration_rejects_invalid_check_letter(client):
         "/visitors",
         json={
             "name": "Jamie Tan",
-            "unit_number": "08-12",
+            "unit_number": "#08-12",
             "vehicle_plate": "SBA1234A",
         },
     )

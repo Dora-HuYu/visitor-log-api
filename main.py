@@ -41,6 +41,12 @@ def health_check():
 @app.post("/visitors", response_model=Visitor, status_code=201)
 async def register_visitor(request: VisitorCreate):
     """Register a visitor and record their check-in time."""
+    if not request.unit_number.startswith("#"):
+        raise HTTPException(
+            status_code=422,
+            detail="Unit number must start with #",
+        )
+
     vehicle_plate = request.vehicle_plate
     if vehicle_plate is not None:
         # Treat inputs such as "sba 1234 g" and "SBA1234G" as the same plate.
